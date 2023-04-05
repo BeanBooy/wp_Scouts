@@ -1,12 +1,20 @@
 
 var left = false,
     right = false,
-    x = Math.round(document.getElementById('character').getBoundingClientRect().left),
     character = document.getElementById('character'),
     screenWidth = document.getElementById('gameScreen').clientWidth,
     gameScene = document.getElementById("gameScreen");
 
+var characterPos = Math.round(document.getElementById('character').getBoundingClientRect().left),
+    initCharacterPos = characterPos;
 
+var gameSceneOffset = 0,
+    gameSceneWidth = getCurrentSceneWidth(),
+    gameSceneMaxOffset = ((getCurrentSceneWidth() - screenWidth) / 2) - 10; // -10 for cleaner edges
+
+var dynamicCenterPoint = characterPos;
+
+console.log(screenWidth, getCurrentSceneWidth());
 
 ///////////////////// GENERATE SCENE WIDTH /////////////////////
 
@@ -56,18 +64,33 @@ function release(e) {
 
 function gameLoop() {
 
-  if(left && x > 40) {
-    x = +x - 5;
+  if(left && characterPos + gameSceneOffset > 40) {
+    if(gameSceneWidth > screenWidth && // gameScene is wider than screen
+        gameSceneOffset < gameSceneMaxOffset && // scene is inside of possible scolling range
+        characterPos < initCharacterPos - gameSceneOffset) { // character is on the left half of the screen
+
+      gameSceneOffset = gameSceneOffset + 5;
+    }
+    characterPos = +characterPos - 5;
     character.classList.add('c_facingLeft');
     character.classList.remove('c_facingRight');
   }
-  if (right && x < screenWidth - character.clientWidth - 40) {
-    x = +x + 5;
+
+  if (right && characterPos < screenWidth - gameSceneOffset - character.clientWidth - 40) {
+    if(gameSceneWidth > screenWidth && // gameScene is wider than screen
+        -gameSceneOffset < gameSceneMaxOffset && // scene is inside of possible scolling range
+        characterPos > initCharacterPos - gameSceneOffset) { // character is on the right half of the screen
+
+      gameSceneOffset = gameSceneOffset - 5;
+    }
+    characterPos = +characterPos + 5;
     character.classList.add('c_facingRight');
     character.classList.remove('c_facingLeft');
   }
 
-  character.style.left = x + 'px';
+  character.style.left = characterPos + 'px';
+  gameScene.style.marginLeft = gameSceneOffset + 'px';
+  //console.log(gameSceneOffset);
 
   window.requestAnimationFrame(gameLoop);
 }
